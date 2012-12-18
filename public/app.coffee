@@ -15,7 +15,7 @@ define ['cs!core/core'
     # Set the path in which we want to execute on
     Router.add '/home', home
 
-    # Process the paths on ready
+    # Process the paths on ready and start
     $ ->
         Router.process()
         Core.startAll()
