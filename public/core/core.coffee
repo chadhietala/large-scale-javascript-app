@@ -77,7 +77,10 @@ define ['cs!core/logging', 'cs!core/pubsub'], (Log, PubSub) ->
             Log.log 2, "Restarted: #{moduleName} Module on #{window.location.href}"
             register moduleName, mod.module, restarted = true
             start moduleName
-        
+    
+    # Subscribe to the restart custom event
+    # This should be improved.  Creates the problem
+    # of having reserved words for events.
     PubSub.subscribe 'restart', restart
 
     # Return the Core API
