@@ -1,4 +1,4 @@
-define [], ->
+define ['cs!core/logging', 'cs!core/pubsub'], (Log, PubSub) ->
     modules = {}
 
     # Returns a module Object
@@ -6,7 +6,7 @@ define [], ->
         modules[moduleName]
 
     # Registers a module to the core and setup it's container
-    register = (moduleName, module) ->
+    register = (moduleName, module, restarted = false) ->
         unless modules[moduleName] and typeof module is 'function'
 
             if $("##{moduleName}").length > 0
@@ -14,11 +14,16 @@ define [], ->
             else
                 container = null
 
-            instance = new module(moduleName)
+            instance = new module(moduleName, restarted)
+
+            # Wraps each module so errors so they can be contained
+            # restarted and logged
+            Log.catch instance, moduleName
 
             modules[moduleName] = 
                 instance: instance
                 container: container
+                module: module
         else
             return true
 
@@ -59,6 +64,21 @@ define [], ->
     deleteAll = ->
         for module of modules
             deleteModule module if modules.hasOwnProperty(module)
+
+    # Private methods
+
+    # Restart the module if any errors arrive
+    restart = (cEvent, data) ->
+
+        unless modules[data.module].instance.restarted
+            moduleName = data.module
+            mod = modules[moduleName]
+            deleteModule moduleName
+            Log.log 2, "Restarted: #{moduleName} Module on #{window.location.href}"
+            register moduleName, mod.module, restarted = true
+            start moduleName
+        
+    PubSub.subscribe 'restart', restart
 
     # Return the Core API
     return {
